@@ -172,7 +172,7 @@ void json_spy_renderer::process_event_dig(sinsp_evt* evt, int32_t next_res)
 	string line;
 
 	m_json_spy_renderer->m_formatter->tostring(evt, &line);
-	m_root.append(line);
+	m_root.push_back(line);
 	m_linecnt++;
 }
 
@@ -1398,7 +1398,7 @@ json sinsp_cursesui::generate_json_info_section()
 
 		for(auto av : wi->m_applies_to)
 		{
-			jinfo["appliesTo"].append(av);
+			jinfo["appliesTo"].push_back(av);
 		}
 
 		sinsp_view_column_info* kinfo = wi->get_key();
@@ -3055,7 +3055,7 @@ bool sinsp_cursesui::handle_stdin_input(bool* res)
 	catch (json::parse_error& e)
 	{
 		fprintf(stderr, "unable to parse the json input: %s",
-			e.what().c_str());
+			e.what());
 		*res = false;
 		return false;
 	}
@@ -3083,7 +3083,7 @@ bool sinsp_cursesui::handle_stdin_input(bool* res)
 	{
 		ta = STA_DRILLDOWN;
 
-		rownum = root["/args/rownum"].asInt();
+		rownum = root["/args/rownum"];
 	}
 	else if(astr == "drillup")
 	{

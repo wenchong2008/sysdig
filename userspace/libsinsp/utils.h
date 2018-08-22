@@ -27,7 +27,7 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include <scap.h>
-#include <nlohmann/json.h>
+#include "json/json.h"
 
 class sinsp_evttables;
 typedef union _sinsp_sockinfo sinsp_sockinfo;
@@ -257,8 +257,8 @@ namespace Json
 	class Value;
 }
 
-std::string get_json_string(const nlohmann::json& obj, const std::string& name);
-inline std::string json_as_string(const nlohmann::json& json)
+std::string get_json_string(const Json::Value& obj, const std::string& name);
+inline std::string json_as_string(const Json::Value& json)
 {
 	return Json::FastWriter().write(json);
 }

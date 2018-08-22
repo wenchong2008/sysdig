@@ -53,8 +53,6 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #include "curl/curl.h"
 #endif
 
-using json = nlohmann::json;
-
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
@@ -1502,11 +1500,11 @@ bool sinsp_numparser::tryparsed32_fast(const char* str, uint32_t strlen, int32_t
 // JSON helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-std::string get_json_string(const json& obj, const std::string& name)
+std::string get_json_string(const Json::Value& obj, const std::string& name)
 {
 	std::string ret;
-	const json& json_val = obj[name];
-	if(!json_val.is_null() && json_val.isConvertibleTo(Json::stringValue))
+	const Json::Value& json_val = obj[name];
+	if(!json_val.isNull() && json_val.isConvertibleTo(Json::stringValue))
 	{
 		ret = json_val.asString();
 	}

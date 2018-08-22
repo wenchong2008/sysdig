@@ -248,7 +248,7 @@ void docker::emit_event(json& root, std::string type, std::string status, bool s
 
 	severity_t severity;
 	std::string event_name = status;
-	std::string id = get_json_string(root, "id");
+	std::string id = root.value("id", "");
 	if(id.length() > 7 && id.substr(0, 7) == "sha256:") // untag and delete have "sha256:id" format
 	{
 		id.clear(); // ignore that (will be displayed in event description)
@@ -272,11 +272,6 @@ void docker::emit_event(json& root, std::string type, std::string status, bool s
 		std::cout << root.dump() << std::endl;
 	}
 
-	try
-	{
-		image = root["/Actor/Attributes/image"_json_pointer];
-	}
-
 	image = root.value("/Actor/Attributes/image"_json_pointer, "");
 
 	event_scope scope;
@@ -289,7 +284,7 @@ void docker::emit_event(json& root, std::string type, std::string status, bool s
 		bool id_was_empty = false;
 		if(id.empty())
 		{
-			id = get_json_string(root, "id");
+			id = root.value("id", "");
 			id_was_empty = true;
 		}
 		if(!id.empty())
@@ -391,11 +386,11 @@ void docker::handle_event(json&& root)
 {
 	if(m_event_filter && (m_event_counter < sinsp_user_event::max_events_per_cycle()))
 	{
-		std::string type = get_json_string(root, "Type");
-		std::string status = get_json_string(root, "Action");
+		std::string type = root.value("Type", "");
+		std::string status = root.value("Action", "");
 		if(status.empty())
 		{
-			status = get_json_string(root, "status");
+			status = root.value("status", "");
 		}
 		g_logger.log("Docker EVENT: type=" + type + ", status=" + status + ", "
 					 "queued events count=" + std::to_string(m_event_counter), sinsp_logger::SEV_DEBUG);

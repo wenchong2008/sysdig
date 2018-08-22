@@ -641,7 +641,6 @@ void sinsp_table::print_raw(vector<sinsp_sample_row>* sample_data, uint64_t time
 
 void sinsp_table::print_json(vector<sinsp_sample_row>* sample_data, uint64_t time_delta)
 {
-	Json::FastWriter writer;
 	vector<filtercheck_field_info>* legend = get_legend();
 	string res;
 	uint32_t j = 0;
@@ -697,7 +696,7 @@ void sinsp_table::print_json(vector<sinsp_sample_row>* sample_data, uint64_t tim
 		root["k"] = key.second;
 		root["d"] = jd;
 
-		res = writer.write(root);
+		res = root.dump();
 		printf("%s", res.substr(0, res.size() - 1).c_str());
 
 		m_json_output_lines_count++;

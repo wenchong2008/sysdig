@@ -26,7 +26,7 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #include <curl/multi.h>
 #endif
 
-#include <nlohmann/json.h>
+#include <nlohmann/json.hpp>
 
 enum sinsp_container_type
 {

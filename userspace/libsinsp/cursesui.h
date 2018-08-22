@@ -22,7 +22,7 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #endif
 
-#include <nlohmann/json.h>
+#include <nlohmann/json.hpp>
 
 #define UI_USER_INPUT_CHECK_PERIOD_NS 10000000
 #define VIEW_SIDEMENU_WIDTH 20

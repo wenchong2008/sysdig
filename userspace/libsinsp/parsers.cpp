@@ -4315,73 +4315,38 @@ void sinsp_parser::parse_container_json_evt(sinsp_evt *evt)
 		throw sinsp_exception("Invalid JSON encountered while parsing container info: " + json + "error=" + e.what());
 	}
 
-	xxx
 	sinsp_container_info container_info;
-	const json& container = root["container"];
-	const json& id = container["id"];
-	if(!id.is_null() && id.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_id = id.asString();
-	}
-	const json& type = container["type"];
-	if(!type.is_null() && type.isConvertibleTo(Json::uintValue))
-	{
-		container_info.m_type = static_cast<sinsp_container_type>(type.asUInt());
-	}
-	const json& name = container["name"];
-	if(!name.is_null() && name.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_name = name.asString();
-	}
-	const json& image = container["image"];
-	if(!image.is_null() && image.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_image = image.asString();
-	}
-	const json& imageid = container["imageid"];
-	if(!imageid.is_null() && imageid.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_imageid = imageid.asString();
-	}
-	const json& imagerepo = container["imagerepo"];
-	if(!imagerepo.is_null() && imagerepo.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_imagerepo = imagerepo.asString();
-	}
-	const json& imagetag = container["imagetag"];
-	if(!imagetag.is_null() && imagetag.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_imagetag = imagetag.asString();
-	}
-	const json& imagedigest = container["imagedigest"];
-	if(!imagedigest.is_null() && imagedigest.isConvertibleTo(Json::stringValue))
-	{
-		container_info.m_imagedigest = imagedigest.asString();
-	}
-	const json& privileged = container["privileged"];
-	if(!privileged.is_null() && privileged.isConvertibleTo(Json::booleanValue))
-	{
-		container_info.m_privileged = privileged.asBool();
-	}
 
-	sinsp_container_info::parse_json_mounts(container["Mounts"], container_info.m_mounts);
-	const json& contip = container["ip"];
-	if(!contip.is_null() && contip.isConvertibleTo(Json::stringValue))
-	{
+	try {
+		container_info.m_id = root.at("/container/id"_json_pointer, "");
+		container_info.m_type = static_cast<sinsp_container_type>((uint32_t) root.at("/container/type"_json_pointer, 0));
+		container_info.m_name = root.at("/container/name"_json_pointer, "");
+		container_info.m_image = root.at("/container/image"_json_pointer, "");
+		container_info.m_imageid = root.at("/container/imageid"_json_pointer, "");
+		container_info.m_imagerepo = root.at("/container/imagerepo"_json_pointer, "");
+		container_info.m_imagetag = root.at("/container/imagetag"_json_pointer, "");
+		container_info.m_imagedigest = root.at("/container/imagedigest"_json_pointer, "");
+		container_info.m_privileged = root.at("/container/privileged"_json_pointer, "");
+
+		sinsp_container_info::parse_json_mounts(container["Mounts"], container_info.m_mounts);
+
+		string contip = root.at("/container/ip"_json_pointer, "");
 		uint32_t ip;
 
-		if(inet_pton(AF_INET, contip.asString().c_str(), &ip) == -1)
+		if(inet_pton(AF_INET, contip.c_str(), &ip) == -1)
 		{
 			throw sinsp_exception("Invalid 'ip' field while parsing container info: " + json);
 		}
 
 		container_info.m_container_ip = ntohl(ip);
+
+		container_info.m_mesos_task_id = root.at("/container/mesos_task_id");
 	}
-	const json& mesos_task_id = container["mesos_task_id"];
-	if(!mesos_task_id.is_null() && mesos_task_id.isConvertibleTo(Json::stringValue))
+	catch (json::type_error& e)
 	{
-		container_info.m_mesos_task_id = mesos_task_id.asString();
+		throw sinsp_exception("Container json did not have necessary fields: " + e.what());
 	}
+
 	m_inspector->m_container_manager.add_container(container_info, evt->get_thread_info(true));
 	/*
 	  g_logger.log("Container\n-------\nID:" + container_info.m_id +
@@ -4437,38 +4402,37 @@ uint8_t* sinsp_parser::reserve_event_buffer()
 }
 
 #ifndef CYGWING_AGENT
-int sinsp_parser::get_k8s_version(const std::string& json)
+int sinsp_parser::get_k8s_version(const std::string& jsons)
 {
 	if(m_k8s_capture_version == k8s_state_t::CAPTURE_VERSION_NONE)
 	{
 		g_logger.log(json, sinsp_logger::SEV_DEBUG);
 		json root;
-		if(Json::Reader().parse(json, root))
+		try
 		{
-			const json& items = root["items"]; // new
-			if(!items.is_null())
-			{
-				g_logger.log("K8s capture version " + std::to_string(k8s_state_t::CAPTURE_VERSION_2) + " detected.",
-							 sinsp_logger::SEV_DEBUG);
-				m_k8s_capture_version = k8s_state_t::CAPTURE_VERSION_2;
-				return m_k8s_capture_version;
-			}
-
-			const json& object = root["object"]; // old
-			if(!object.is_null())
-			{
-				g_logger.log("K8s capture version " + std::to_string(k8s_state_t::CAPTURE_VERSION_2) + " detected.",
-							 sinsp_logger::SEV_DEBUG);
-				m_k8s_capture_version = k8s_state_t::CAPTURE_VERSION_1;
-				return m_k8s_capture_version;
-			}
-			throw sinsp_exception("Unrecognized K8s capture format.");
+			root = json::parse(jsons);
 		}
-		else
+		catch (json::parse_error& e)
 		{
-			std::string errstr;
-			errstr = Json::Reader().getFormattedErrorMessages();
-			throw sinsp_exception("Invalid K8s capture JSON encountered (" + errstr + ")");
+			throw sinsp_exception("Invalid K8s capture JSON encountered (" + e.what() + ")");
+		}
+
+		const json& items = root["items"]; // new
+		if(!items.is_null())
+		{
+			g_logger.log("K8s capture version " + std::to_string(k8s_state_t::CAPTURE_VERSION_2) + " detected.",
+				     sinsp_logger::SEV_DEBUG);
+			m_k8s_capture_version = k8s_state_t::CAPTURE_VERSION_2;
+			return m_k8s_capture_version;
+		}
+
+		const json& object = root["object"]; // old
+		if(!object.is_null())
+		{
+			g_logger.log("K8s capture version " + std::to_string(k8s_state_t::CAPTURE_VERSION_2) + " detected.",
+				     sinsp_logger::SEV_DEBUG);
+			m_k8s_capture_version = k8s_state_t::CAPTURE_VERSION_1;
+			return m_k8s_capture_version;
 		}
 	}
 
@@ -4480,8 +4444,8 @@ void sinsp_parser::parse_k8s_evt(sinsp_evt *evt)
 	sinsp_evt_param *parinfo = evt->get_param(0);
 	ASSERT(parinfo);
 	ASSERT(parinfo->m_len > 0);
-	std::string json(parinfo->m_val, parinfo->m_len);
-	//g_logger.log(json, sinsp_logger::SEV_DEBUG);
+	std::string jsons(parinfo->m_val, parinfo->m_len);
+	//g_logger.log(jsons, sinsp_logger::SEV_DEBUG);
 	ASSERT(m_inspector);
 	if(!m_inspector)
 	{
@@ -4493,7 +4457,7 @@ void sinsp_parser::parse_k8s_evt(sinsp_evt *evt)
 	}
 	if(m_inspector->m_k8s_client)
 	{
-		m_inspector->m_k8s_client->simulate_watch_event(std::move(json), get_k8s_version(json));
+		m_inspector->m_k8s_client->simulate_watch_event(std::move(jsons), get_k8s_version(jsons));
 	}
 	else
 	{
@@ -4506,11 +4470,11 @@ void sinsp_parser::parse_mesos_evt(sinsp_evt *evt)
 	sinsp_evt_param *parinfo = evt->get_param(0);
 	ASSERT(parinfo);
 	ASSERT(parinfo->m_len > 0);
-	std::string json(parinfo->m_val, parinfo->m_len);
-	//g_logger.log(json, sinsp_logger::SEV_DEBUG);
+	std::string jsons(parinfo->m_val, parinfo->m_len);
+	//g_logger.log(jsons, sinsp_logger::SEV_DEBUG);
 	ASSERT(m_inspector);
 	ASSERT(m_inspector->m_mesos_client);
-	m_inspector->m_mesos_client->simulate_event(json);
+	m_inspector->m_mesos_client->simulate_event(jsons);
 }
 #endif // CYGWING_AGENT
 

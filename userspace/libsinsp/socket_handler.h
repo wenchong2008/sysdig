@@ -8,7 +8,7 @@
 
 #include "http_parser.h"
 #include "uri.h"
-#include <nlohmann/json.h>
+#include "json/json.h"
 #define BUFFERSIZE 512 // b64 needs this macro
 #include "b64/encode.h"
 #include "sinsp.h"
@@ -60,7 +60,7 @@ class socket_data_handler
 {
 public:
 	typedef std::shared_ptr<socket_data_handler> ptr_t;
-	typedef std::shared_ptr<json>         json_ptr_t;
+	typedef std::shared_ptr<Json::Value>         json_ptr_t;
 	typedef sinsp_ssl::ptr_t                     ssl_ptr_t;
 	typedef sinsp_bearer_token::ptr_t            bt_ptr_t;
 	typedef void (T::*json_callback_func_t)(json_ptr_t, const std::string&);
@@ -426,7 +426,7 @@ public:
 			handled = false;
 			for(auto it = m_json_filters.cbegin(); it != m_json_filters.cend(); ++it)
 			{
-				json_ptr_t pnlohmann::json = try_parse(m_jq, *js, *it, m_id, m_url.to_string(false));
+				json_ptr_t pjson = try_parse(m_jq, *js, *it, m_id, m_url.to_string(false));
 				if(pjson)
 				{
 					(m_obj.*m_json_callback)(pjson, m_id);
@@ -739,13 +739,13 @@ public:
 			// and log error if all filters fail
 			if(jq.process(json, filter))
 			{
-				filtered_nlohmann::json = jq.result();
+				filtered_json = jq.result();
 				if (filtered_json.empty() && !jq.get_error().empty())
 				{
 					g_logger.log("Socket handler (" + id + "), [" +
 						     url + "] filter result is empty \"" +
 						     jq.get_error() + "\"; JSON: <" +
-						     nlohmann::json + ">, jq filter: <" + filter + '>',
+						     json + ">, jq filter: <" + filter + '>',
 						     sinsp_logger::SEV_DEBUG);
 				}
 			}
@@ -754,12 +754,12 @@ public:
 				g_logger.log("Socket handler (" + id + "), [" +
 					     url + "] filter processing error \"" +
 					     jq.get_error() + "\"; JSON: <" +
-					     nlohmann::json + ">, jq filter: <" + filter + '>',
+					     json + ">, jq filter: <" + filter + '>',
 					     sinsp_logger::SEV_DEBUG);
 				return nullptr;
 			}
 		}
-		json_ptr_t root(new json());
+		json_ptr_t root(new Json::Value());
 		try
 		{
 			if(Json::Reader().parse(filtered_json, *root))
@@ -777,7 +777,7 @@ public:
 		}
 		catch(...) { }
 		g_logger.log("Socket handler (" + id + "), [" + url + "] parsing error; JSON: <" +
-					 nlohmann::json + ">, jq filter: <" + filter + '>', sinsp_logger::SEV_ERROR);
+					 json + ">, jq filter: <" + filter + '>', sinsp_logger::SEV_ERROR);
 		return nullptr;
 	}
 
@@ -1550,7 +1550,7 @@ private:
 	struct http_parser_data
 	{
 		std::string* m_data_buf = nullptr;
-		std::vector<std::string>* m_nlohmann::json = nullptr;
+		std::vector<std::string>* m_json = nullptr;
 		int* m_http_response = nullptr;
 		bool* m_msg_completed = nullptr;
 		bool* m_fetching_state = nullptr;
@@ -1594,7 +1594,7 @@ private:
 							}*/
 						}
 					}
-					else { throw sinsp_exception("Socket handler (http_body_callback): http or nlohmann::json buffer is null."); }
+					else { throw sinsp_exception("Socket handler (http_body_callback): http or json buffer is null."); }
 				}
 			}
 			else { throw sinsp_exception("Socket handler (http_body_callback) parser data is null."); }
@@ -1659,7 +1659,7 @@ private:
 			m_http_parser = (http_parser *)std::malloc(sizeof(http_parser));
 		}
 		m_http_parser_data.m_data_buf = &m_data_buf;
-		m_http_parser_data.m_nlohmann::json = &m_json;
+		m_http_parser_data.m_json = &m_json;
 		m_http_parser_data.m_http_response = &m_http_response;
 		m_http_parser_data.m_msg_completed = &m_msg_completed;
 		m_http_parser_data.m_fetching_state = &m_fetching_state;

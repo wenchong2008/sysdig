@@ -139,20 +139,20 @@ size_t sinsp_container_engine_docker::curl_write_callback(const char* ptr, size_
 
 bool sinsp_container_engine_docker::parse_docker(sinsp_container_manager* manager, sinsp_container_info *container, sinsp_threadinfo* tinfo)
 {
-	string json;
+	string container_json;
 #ifndef CYGWING_AGENT
-	sinsp_docker_response resp = get_docker(manager, "http://localhost" + m_api_version + "/containers/" + container->m_id + "/json", json);
+	sinsp_docker_response resp = get_docker(manager, "http://localhost" + m_api_version + "/containers/" + container->m_id + "/json", container_json);
 #else
-	sinsp_docker_response resp = get_docker(manager, "GET /v1.30/containers/" + container->m_id + "/json HTTP/1.1\r\nHost: docker\r\n\r\n", json);
+	sinsp_docker_response resp = get_docker(manager, "GET /v1.30/containers/" + container->m_id + "/json HTTP/1.1\r\nHost: docker\r\n\r\n", container_json);
 #endif
 	switch(resp) {
 		case sinsp_docker_response::RESP_BAD_REQUEST:
 			m_api_version = "";
-			json = "";
+			container_json = "";
 #ifndef CYGWING_AGENT
-			resp = get_docker(manager, "http://localhost/containers/" + container->m_id + "/json", json);
+			resp = get_docker(manager, "http://localhost/containers/" + container->m_id + "/json", container_json);
 #else
-			resp = get_docker(manager, "GET /containers/" + container->m_id + "/json HTTP/1.1\r\nHost: docker\r\n\r\n", json);
+			resp = get_docker(manager, "GET /containers/" + container->m_id + "/json HTTP/1.1\r\nHost: docker\r\n\r\n", container_json);
 #endif
 			if (resp == sinsp_docker_response::RESP_OK)
 			{
@@ -171,7 +171,7 @@ bool sinsp_container_engine_docker::parse_docker(sinsp_container_manager* manage
 
 	try
 	{
-		root = json::parse(json);
+		root = json::parse(container_json);
 	}
 	catch (json::parse_error& e)
 	{
@@ -306,8 +306,8 @@ bool sinsp_container_engine_docker::parse_docker(sinsp_container_manager* manage
 		container->m_container_ip = ntohl(container->m_container_ip);
 	}
 
-	json &ports = net_obj["Ports"];
-	for (json::iterator it = ports.begin(); it != ports.end(); ++it) {
+	const json &ports = net_obj["Ports"];
+	for (json::const_iterator it = ports.begin(); it != ports.end(); ++it)
 	{
 		size_t tcp_pos = it.key().find("/tcp");
 		if(tcp_pos == string::npos)
@@ -337,8 +337,8 @@ bool sinsp_container_engine_docker::parse_docker(sinsp_container_manager* manage
 		}
 	}
 
-	json &labels = config_obj["Labels"];
-	for(json::iterator it = labels.begin(); it != labels.end(); ++it)
+	const json &labels = config_obj["Labels"];
+	for(json::const_iterator it = labels.begin(); it != labels.end(); ++it)
 	{
 		container->m_labels[it.key()] = it.value();
 	}
@@ -349,13 +349,14 @@ bool sinsp_container_engine_docker::parse_docker(sinsp_container_manager* manage
 	{
 		if(env_var.is_string())
 		{
-			container->m_env.emplace_back(env_var);
+			container->m_env.emplace_back(env_var.get<std::string>());
 		}
 	}
 
 	if (sinsp_container_engine_mesos::set_mesos_task_id(container, tinfo))
 	{
-		g_logger.log("Mesos Docker container: [" + root["Id"].asString() + "], Mesos task ID: [" + container->m_mesos_task_id + ']', sinsp_logger::SEV_DEBUG);
+		string Id = root["Id"];
+		g_logger.log("Mesos Docker container: [" + Id + "], Mesos task ID: [" + container->m_mesos_task_id + ']', sinsp_logger::SEV_DEBUG);
 	}
 
 	container->m_memory_limit = root["/HostConfig/Memory"_json_pointer];
@@ -973,7 +974,7 @@ bool sinsp_container_engine_rkt::parse_rkt(sinsp_container_info *container, cons
 	container->m_image = jroot["name"];
 	for(const auto& label_entry : jroot["labels"])
 	{
-		container->m_labels.emplace(label_entry["name"], label_entry["value"]);
+		container->m_labels.emplace(label_entry["name"].get<std::string>(), label_entry["value"].get<std::string>());
 	}
 	auto version_label_it = container->m_labels.find("version");
 	if(version_label_it != container->m_labels.end())
@@ -1046,7 +1047,7 @@ bool sinsp_container_engine_rkt::parse_rkt(sinsp_container_info *container, cons
 			}
 		}
 	}
-	return ret;
+	return true;
 }
 #endif
 
@@ -1164,7 +1165,7 @@ string sinsp_container_manager::container_to_json(const sinsp_container_info& co
 				{"imagerepo", container_info.m_imagerepo},
 				{"imagetag", container_info.m_imagetag},
 				{"imagedigest", container_info.m_imagedigest},
-				{"privileged", container_info.m_privileged}
+				{"privileged", container_info.m_privileged},
 				{"mounts", json::array()}
 			}
 		}
