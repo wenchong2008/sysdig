@@ -26,37 +26,7 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 class sinsp_filter_expression;
 class sinsp_filter_check;
 
-/*
- * Operators to compare events
- */
-enum cmpop {
-	CO_NONE = 0,
-	CO_EQ = 1,
-	CO_NE = 2,
-	CO_LT = 3,
-	CO_LE = 4,
-	CO_GT = 5,
-	CO_GE = 6,
-	CO_CONTAINS = 7,
-	CO_IN = 8,
-	CO_EXISTS = 9,
-	CO_ICONTAINS = 10,
-	CO_STARTSWITH = 11,
-	CO_GLOB = 12,
-	CO_PMATCH = 13
-};
-
-enum boolop
-{
-	BO_NONE = 0,
-	BO_NOT = 1,
-	BO_OR = 2,
-	BO_AND = 4,
-
-	// obtained by bitwise OR'ing with one of above ops
-	BO_ORNOT = 3,
-	BO_ANDNOT = 5,
-};
+#include "lua_parser_api.h"
 
 /** @defgroup filter Filtering events
  * Filtering infrastructure.
@@ -66,7 +36,7 @@ enum boolop
 /*!
   \brief This is the class that runs sysdig-type filters.
 */
-class SINSP_PUBLIC sinsp_filter
+class SINSP_PUBLIC sinsp_filter : public lua_parser_filter
 {
 public:
 	/*!
@@ -88,7 +58,7 @@ public:
 	bool run(sinsp_evt *evt);
 	void push_expression(boolop op);
 	void pop_expression();
-	void add_check(sinsp_filter_check* chk);
+	void add_check(lua_parser_filtercheck* chk);
 
 private:
 
@@ -261,5 +231,19 @@ private:
 };
 
 /*@}*/
+
+class sinsp_filter_factory : public lua_filter_factory
+{
+public:
+	sinsp_filter_factory(sinsp *inspector);
+	virtual ~sinsp_filter_factory();
+
+	lua_parser_filter *new_filter();
+
+	lua_parser_filtercheck *new_filtercheck(const char *fldname);
+
+protected:
+	sinsp *m_inspector;
+};
 
 #endif // HAS_FILTERING

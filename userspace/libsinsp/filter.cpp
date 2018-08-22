@@ -1246,9 +1246,9 @@ sinsp_filter_check* sinsp_filter_expression::allocate_new()
 	return NULL;
 }
 
-void sinsp_filter_expression::add_check(sinsp_filter_check* chk)
+void sinsp_filter_expression::add_check(lua_parser_filtercheck* chk)
 {
-	m_checks.push_back(chk);
+	m_checks.push_back((sinsp_filter_check *) chk);
 }
 
 void sinsp_filter_expression::parse(string expr)
@@ -1383,9 +1383,9 @@ bool sinsp_filter::run(sinsp_evt *evt)
 	return m_filter->compare(evt);
 }
 
-void sinsp_filter::add_check(sinsp_filter_check* chk)
+void sinsp_filter::add_check(lua_parser_filtercheck* chk)
 {
-	m_curexpr->add_check(chk);
+	m_curexpr->add_check((sinsp_filter_check *) chk);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2356,5 +2356,28 @@ void sinsp_evttype_filter::syscalls_for_ruleset(std::vector<bool> &syscalls, uin
 {
 	return m_rulesets[ruleset]->syscalls_for_ruleset(syscalls);
 }
+
+sinsp_filter_factory::sinsp_filter_factory(sinsp *inspector)
+	: m_inspector(inspector)
+{
+}
+
+sinsp_filter_factory::~sinsp_filter_factory()
+{
+}
+
+lua_parser_filter *sinsp_filter_factory::new_filter()
+{
+	return new sinsp_filter(m_inspector);
+}
+
+
+lua_parser_filtercheck *sinsp_filter_factory::new_filtercheck(const char *fldname)
+{
+	return g_filterlist.new_filter_check_from_fldname(fldname,
+							  m_inspector,
+							  true);
+}
+
 
 #endif // HAS_FILTERING

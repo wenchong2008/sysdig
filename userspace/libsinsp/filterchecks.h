@@ -51,7 +51,7 @@ public:
 // NOTE: in order to add a new type of filter check, you need to add a class for
 //       it and then add it to new_filter_check_from_name.
 ///////////////////////////////////////////////////////////////////////////////
-class sinsp_filter_check
+class sinsp_filter_check : public lua_parser_filtercheck
 {
 public:
 	sinsp_filter_check();
@@ -137,8 +137,6 @@ public:
 
 	sinsp* m_inspector;
 	bool m_needs_state_tracking = false;
-	boolop m_boolop;
-	cmpop m_cmpop;
 	sinsp_field_aggregation m_aggregation;
 	sinsp_field_aggregation m_merge_aggregation;
 
@@ -205,7 +203,7 @@ public:
 	sinsp_filter_expression();
 	~sinsp_filter_expression();
 	sinsp_filter_check* allocate_new();
-	void add_check(sinsp_filter_check* chk);
+	void add_check(lua_parser_filtercheck* chk);
 	// does nothing for sinsp_filter_expression
 	void parse(string expr);
 	bool compare(sinsp_evt *evt);
