@@ -1056,17 +1056,6 @@ int32_t sinsp_filter_check::parse_field_name(const char* str, bool alloc_state, 
 	return max_fldlen;
 }
 
-void sinsp_filter_check::set_check_id(int32_t id)
-{
-	m_check_id = id;
-}
-
-int32_t sinsp_filter_check::get_check_id()
-{
-	return m_check_id;
-}
-
-
 void sinsp_filter_check::add_filter_value(const char* str, uint32_t len, uint32_t i)
 {
 	size_t parsed_len;
@@ -1216,176 +1205,9 @@ bool sinsp_filter_check::compare(sinsp_evt *evt)
 			   m_val_storage_len);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// sinsp_filter_expression implementation
-///////////////////////////////////////////////////////////////////////////////
-sinsp_filter_expression::sinsp_filter_expression()
-{
-	m_parent = NULL;
-}
-
-sinsp_filter_expression::~sinsp_filter_expression()
-{
-	uint32_t j;
-
-	for(j = 0; j < m_checks.size(); j++)
-	{
-		delete m_checks[j];
-	}
-}
-
-// Only filter checks get IDs
-int32_t sinsp_filter_expression::get_check_id()
-{
-	return 0;
-}
-
-sinsp_filter_check* sinsp_filter_expression::allocate_new()
-{
-	ASSERT(false);
-	return NULL;
-}
-
-void sinsp_filter_expression::add_check(lua_parser_filtercheck* chk)
-{
-	m_checks.push_back((sinsp_filter_check *) chk);
-}
-
-void sinsp_filter_expression::parse(string expr)
-{
-}
-
-bool sinsp_filter_expression::compare(sinsp_evt *evt)
-{
-	uint32_t j;
-	uint32_t size = (uint32_t)m_checks.size();
-	bool res = true;
-	sinsp_filter_check* chk = NULL;
-
-	for(j = 0; j < size; j++)
-	{
-		chk = m_checks[j];
-		ASSERT(chk != NULL);
-
-		if(j == 0)
-		{
-			switch(chk->m_boolop)
-			{
-			case BO_NONE:
-				res = chk->compare(evt);
-				if (res) {
-					evt->set_check_id(chk->get_check_id());
-				}
-				break;
-			case BO_NOT:
-				res = !chk->compare(evt);
-				break;
-			default:
-				ASSERT(false);
-				break;
-			}
-		}
-		else
-		{
-			switch(chk->m_boolop)
-			{
-			case BO_OR:
-				if(res)
-				{
-					goto done;
-				}
-				res = chk->compare(evt);
-				if (res) {
-					evt->set_check_id(chk->get_check_id());
-				}
-				break;
-			case BO_AND:
-				if(!res)
-				{
-					goto done;
-				}
-				res = chk->compare(evt);
-				if (res) {
-					evt->set_check_id(chk->get_check_id());
-				}
-				break;
-			case BO_ORNOT:
-				if(res)
-				{
-					goto done;
-				}
-				res = !chk->compare(evt);
-				if (res) {
-					evt->set_check_id(chk->get_check_id());
-				}
-				break;
-			case BO_ANDNOT:
-				if(!res)
-				{
-					goto done;
-				}
-				res = !chk->compare(evt);
-				if (res) {
-					evt->set_check_id(chk->get_check_id());
-				}
-				break;
-			default:
-				ASSERT(false);
-				break;
-			}
-		}
-	}
- done:
-
-	return res;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// sinsp_filter implementation
-///////////////////////////////////////////////////////////////////////////////
-sinsp_filter::sinsp_filter(sinsp* inspector)
+sinsp_filter::sinsp_filter(sinsp *inspector)
 {
 	m_inspector = inspector;
-	m_filter = new sinsp_filter_expression();
-	m_curexpr = m_filter;
-
-}
-
-sinsp_filter::~sinsp_filter()
-{
-	if(m_filter)
-	{
-		delete m_filter;
-	}
-}
-
-void sinsp_filter::push_expression(boolop op)
-{
-	sinsp_filter_expression* newexpr = new sinsp_filter_expression();
-	newexpr->m_boolop = op;
-	newexpr->m_parent = m_curexpr;
-
-	add_check((sinsp_filter_check*)newexpr);
-	m_curexpr = newexpr;
-}
-
-void sinsp_filter::pop_expression()
-{
-	ASSERT(m_curexpr->m_parent != NULL);
-
-	m_curexpr = m_curexpr->m_parent;
-}
-
-bool sinsp_filter::run(sinsp_evt *evt)
-{
-	//	printf("m_filter: %p", (void*) m_filter);
-	//	ASSERT(m_filter != NULL);
-	return m_filter->compare(evt);
-}
-
-void sinsp_filter::add_check(lua_parser_filtercheck* chk)
-{
-	m_curexpr->add_check((sinsp_filter_check *) chk);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2366,13 +2188,13 @@ sinsp_filter_factory::~sinsp_filter_factory()
 {
 }
 
-lua_parser_filter *sinsp_filter_factory::new_filter()
+gen_event_filter *sinsp_filter_factory::new_filter()
 {
 	return new sinsp_filter(m_inspector);
 }
 
 
-lua_parser_filtercheck *sinsp_filter_factory::new_filtercheck(const char *fldname)
+gen_event_filter_check *sinsp_filter_factory::new_filtercheck(const char *fldname)
 {
 	return g_filterlist.new_filter_check_from_fldname(fldname,
 							  m_inspector,

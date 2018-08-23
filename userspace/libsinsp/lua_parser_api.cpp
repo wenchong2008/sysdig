@@ -109,7 +109,7 @@ int lua_parser_cbacks::nest(lua_State *ls)
 		throw sinsp_exception(err);
 	}
 
-	lua_parser_filter* filter = parser->m_filter;
+	gen_event_filter* filter = parser->m_filter;
 
 	filter->push_expression(parser->m_last_boolop);
 	parser->m_nest_level++;
@@ -134,7 +134,7 @@ int lua_parser_cbacks::unnest(lua_State *ls)
 		throw sinsp_exception(err);
 	}
 
-	lua_parser_filter* filter = parser->m_filter;
+	gen_event_filter* filter = parser->m_filter;
 
 	filter->pop_expression();
 	parser->m_nest_level--;
@@ -197,10 +197,10 @@ int lua_parser_cbacks::rel_expr(lua_State *ls)
 	}
 
 	parser->m_have_rel_expr = true;
-	lua_parser_filter* filter = parser->m_filter;
+	gen_event_filter* filter = parser->m_filter;
 
 	const char* fld = luaL_checkstring(ls, 1);
-	lua_parser_filtercheck *chk = parser->m_factory->new_filtercheck(fld);
+	gen_event_filter_check *chk = parser->m_factory->new_filtercheck(fld);
 	if(chk == NULL)
 	{
 		string err = "filter_check called with nonexistent field " + string(fld);

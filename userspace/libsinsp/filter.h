@@ -23,10 +23,7 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef HAS_FILTERING
 
-class sinsp_filter_expression;
-class sinsp_filter_check;
-
-#include "lua_parser_api.h"
+#include "gen_filter.h"
 
 /** @defgroup filter Filtering events
  * Filtering infrastructure.
@@ -36,39 +33,14 @@ class sinsp_filter_check;
 /*!
   \brief This is the class that runs sysdig-type filters.
 */
-class SINSP_PUBLIC sinsp_filter : public lua_parser_filter
+class SINSP_PUBLIC sinsp_filter : public gen_event_filter
 {
 public:
-	/*!
-	  \brief Constructs the filter.
-
-	  \param inspector Pointer to the inspector instance that will generate the
-	   events to be filtered.
-	*/
 	sinsp_filter(sinsp* inspector);
-
 	~sinsp_filter();
 
-	/*!
-	  \brief Applies the filter to the given event.
-
-	  \param evt Pointer that needs to be filtered.
-	  \return true if the event is accepted by the filter, false if it's rejected.
-	*/
-	bool run(sinsp_evt *evt);
-	void push_expression(boolop op);
-	void pop_expression();
-	void add_check(lua_parser_filtercheck* chk);
-
 private:
-
-	void parse_check(sinsp_filter_expression* parent_expr, boolop op);
-
-
 	sinsp* m_inspector;
-
-	sinsp_filter_expression* m_curexpr;
-	sinsp_filter_expression* m_filter;
 
 	friend class sinsp_evt_formatter;
 };
@@ -232,15 +204,15 @@ private:
 
 /*@}*/
 
-class sinsp_filter_factory : public lua_filter_factory
+class sinsp_filter_factory : gen_event_filter_factory
 {
 public:
 	sinsp_filter_factory(sinsp *inspector);
 	virtual ~sinsp_filter_factory();
 
-	lua_parser_filter *new_filter();
+	gen_event_filter *new_filter();
 
-	lua_parser_filtercheck *new_filtercheck(const char *fldname);
+	gen_event_filter_check *new_filtercheck(const char *fldname);
 
 protected:
 	sinsp *m_inspector;

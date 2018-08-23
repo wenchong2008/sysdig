@@ -27,6 +27,8 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifdef HAS_FILTERING
+#include "gen_filter.h"
+
 class sinsp_filter_check_reference;
 
 bool flt_compare(cmpop op, ppm_param_type type, void* operand1, void* operand2, uint32_t op1_len = 0, uint32_t op2_len = 0);
@@ -51,7 +53,8 @@ public:
 // NOTE: in order to add a new type of filter check, you need to add a class for
 //       it and then add it to new_filter_check_from_name.
 ///////////////////////////////////////////////////////////////////////////////
-class sinsp_filter_check : public lua_parser_filtercheck
+
+class sinsp_filter_check : public gen_event_filter_check
 {
 public:
 	sinsp_filter_check();
@@ -129,12 +132,6 @@ public:
 	//
 	virtual Json::Value tojson(sinsp_evt* evt);
 
-	//
-	// Configure numeric id to be set on events that match this filter
-	//
-	void set_check_id(int32_t id);
-	virtual int32_t get_check_id();
-
 	sinsp* m_inspector;
 	bool m_needs_state_tracking = false;
 	sinsp_field_aggregation m_aggregation;
@@ -169,7 +166,6 @@ protected:
 
 private:
 	void set_inspector(sinsp* inspector);
-	int32_t m_check_id = 0;
 
 friend class sinsp_filter_check_list;
 };
@@ -190,50 +186,6 @@ public:
 
 private:
 	vector<sinsp_filter_check*> m_check_list;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// Filter expression class
-// A filter expression contains multiple filters connected by boolean expressions,
-// e.g. "check or check", "check and check and check", "not check"
-///////////////////////////////////////////////////////////////////////////////
-class sinsp_filter_expression : public sinsp_filter_check
-{
-public:
-	sinsp_filter_expression();
-	~sinsp_filter_expression();
-	sinsp_filter_check* allocate_new();
-	void add_check(lua_parser_filtercheck* chk);
-	// does nothing for sinsp_filter_expression
-	void parse(string expr);
-	bool compare(sinsp_evt *evt);
-
-	//
-	// The following methods are part of the filter check interface but are irrelevant
-	// for this class, because they are used only for the leaves of the filtering tree.
-	//
-	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering)
-	{
-		ASSERT(false);
-		return 0;
-	}
-
-	const filtercheck_field_info* get_field_info()
-	{
-		ASSERT(false);
-		return NULL;
-	}
-
-	uint8_t* extract(sinsp_evt *evt, OUT uint32_t* len, bool sanitize_strings = true)
-	{
-		ASSERT(false);
-		return NULL;
-	}
-
-	int32_t get_check_id();
-
-	sinsp_filter_expression* m_parent;
-	vector<sinsp_filter_check*> m_checks;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

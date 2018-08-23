@@ -47,14 +47,14 @@ void lua_parser::reset()
 	m_filter = m_factory->new_filter();
 }
 
-lua_parser_filter* lua_parser::get_filter(bool reset_filter)
+gen_event_filter* lua_parser::get_filter(bool reset_filter)
 {
 	if (m_nest_level != 0)
 	{
 		throw sinsp_exception("Error in configured filter: unbalanced nesting");
 	}
 
-	lua_parser_filter *ret = m_filter;
+	gen_event_filter *ret = m_filter;
 
 	if (reset_filter)
 	{

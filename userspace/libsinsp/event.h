@@ -23,6 +23,8 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #define VISIBILITY_PRIVATE private:
 #endif
 
+#include "gen_filter.h"
+
 typedef class sinsp sinsp;
 typedef class sinsp_threadinfo sinsp_threadinfo;
 
@@ -91,7 +93,7 @@ private:
   events and their parameters, including parsing, formatting and extracting
   state like the event process or FD.
 */
-class SINSP_PUBLIC sinsp_evt
+class SINSP_PUBLIC sinsp_evt : public gen_event
 {
 public:
 	/*!
@@ -307,16 +309,6 @@ public:
 	*/
 	void get_category(OUT sinsp_evt::category* cat);
 
-	/*!
-	  \brief Set an opaque "check id", corresponding to the id of the last filtercheck that matched this event.
-	*/
-	void set_check_id(int32_t id);
-
-	/*!
-	  \brief Get the opaque "check id" (-1 if not set).
-	*/
-	int32_t get_check_id();
-
 #ifdef HAS_FILTERING
 	/*!
 	  \brief Return true if the event has been rejected by the filtering system.
@@ -411,7 +403,6 @@ VISIBILITY_PRIVATE
 	uint16_t m_cpuid;
 	uint64_t m_evtnum;
 	uint32_t m_flags;
-	int32_t m_check_id = 0;
 	bool m_params_loaded;
 	const struct ppm_event_info* m_info;
 	vector<sinsp_evt_param> m_params;
