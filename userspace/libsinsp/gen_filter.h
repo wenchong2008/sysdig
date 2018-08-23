@@ -18,6 +18,8 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <vector>
+
 /*
  * Operators to compare events
  */
@@ -78,12 +80,13 @@ public:
 	gen_event_filter_check();
 	virtual ~gen_event_filter_check();
 
-	virtual bool compare(gen_event *evt);
+	virtual bool compare(gen_event *evt) = 0;
 
 	boolop m_boolop;
 	cmpop m_cmpop;
 
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) = 0;
+	virtual void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 ) = 0;
 
 	//
 	// Configure numeric id to be set on events that match this filter
@@ -117,17 +120,22 @@ public:
 		return 0;
 	}
 
+	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 )
+	{
+		return;
+	}
+
 	void add_check(gen_event_filter_check* chk);
 
 	bool compare(gen_event *evt);
 
 	gen_event_filter_expression* m_parent;
-	vector<gen_event_filter_check*> m_checks;
+	std::vector<gen_event_filter_check*> m_checks;
 };
 
 
 
-class SINSP_PUBLIC gen_event_filter
+class gen_event_filter
 {
 public:
 	/*!
@@ -151,7 +159,7 @@ public:
 	void pop_expression();
 	void add_check(gen_event_filter_check* chk);
 
-private:
+protected:
 	gen_event_filter_expression* m_curexpr;
 	gen_event_filter_expression* m_filter;
 

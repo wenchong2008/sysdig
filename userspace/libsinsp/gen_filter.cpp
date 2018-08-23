@@ -16,7 +16,11 @@ You should have received a copy of the GNU General Public License
 along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cstddef>
+#include "stdint.h"
 #include "gen_filter.h"
+#include "sinsp.h"
+#include "sinsp_int.h"
 
 gen_event::gen_event()
 {
@@ -44,11 +48,6 @@ gen_event_filter_check::gen_event_filter_check()
 
 gen_event_filter_check::~gen_event_filter_check()
 {
-}
-
-bool gen_event_filter_check::compare(gen_event *evt)
-{
-	return false;
 }
 
 void gen_event_filter_check::set_check_id(int32_t id)

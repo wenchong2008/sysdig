@@ -23,7 +23,7 @@ const static struct luaL_reg ll_filter [] =
 	{NULL,NULL}
 };
 
-lua_parser::lua_parser(lua_filter_factory *factory, lua_State *ls, const char *lua_global_binding)
+lua_parser::lua_parser(gen_event_filter_factory *factory, lua_State *ls, const char *lua_global_binding)
 {
 	m_factory = factory;
 

@@ -119,6 +119,7 @@ public:
 	//
 	// Compare the field with the constant value obtained from parse_filter_value()
 	//
+	bool compare(gen_event *evt);
 	virtual bool compare(sinsp_evt *evt);
 
 	//

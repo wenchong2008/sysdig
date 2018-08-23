@@ -1187,6 +1187,11 @@ bool sinsp_filter_check::flt_compare(cmpop op, ppm_param_type type, void* operan
 	}
 }
 
+bool sinsp_filter_check::compare(gen_event *evt)
+{
+	return compare((sinsp_evt *) evt);
+}
+
 bool sinsp_filter_check::compare(sinsp_evt *evt)
 {
 	uint32_t evt_val_len=0;
@@ -1208,6 +1213,10 @@ bool sinsp_filter_check::compare(sinsp_evt *evt)
 sinsp_filter::sinsp_filter(sinsp *inspector)
 {
 	m_inspector = inspector;
+}
+
+sinsp_filter::~sinsp_filter()
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////////
