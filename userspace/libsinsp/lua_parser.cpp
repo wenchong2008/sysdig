@@ -23,19 +23,16 @@ const static struct luaL_reg ll_filter [] =
 	{NULL,NULL}
 };
 
-lua_parser::lua_parser(gen_event_filter_factory *factory, lua_State *ls, const char *lua_global_binding)
+lua_parser::lua_parser(gen_event_filter_factory *factory, lua_State *ls, const char *lua_library_name)
 {
+	m_filter = NULL;
 	m_factory = factory;
 
 	m_ls = ls;
 	reset();
 
 	// Register our c++ defined functions
-	luaL_openlib(m_ls, lua_global_binding, ll_filter, 0);
-
-	lua_pushlightuserdata(m_ls, this);
-	lua_setglobal(m_ls, "siparser");
-
+	luaL_openlib(m_ls, lua_library_name, ll_filter, 0);
 }
 
 void lua_parser::reset()
@@ -69,6 +66,7 @@ lua_parser::~lua_parser()
 	// not freeing it.
 
 	delete m_filter;
+	m_filter = NULL;
 }
 
 
