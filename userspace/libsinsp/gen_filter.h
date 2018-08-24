@@ -80,13 +80,12 @@ public:
 	gen_event_filter_check();
 	virtual ~gen_event_filter_check();
 
-	virtual bool compare(gen_event *evt) = 0;
-
 	boolop m_boolop;
 	cmpop m_cmpop;
 
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) = 0;
 	virtual void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 ) = 0;
+	virtual bool compare(gen_event *evt) = 0;
 
 	//
 	// Configure numeric id to be set on events that match this filter
