@@ -108,7 +108,7 @@ class gen_event_filter_expression : public gen_event_filter_check
 {
 public:
 	gen_event_filter_expression();
-	~gen_event_filter_expression();
+	virtual ~gen_event_filter_expression();
 
 	//
 	// The following methods are part of the filter check interface but are irrelevant
@@ -145,7 +145,7 @@ public:
 	*/
 	gen_event_filter();
 
-	~gen_event_filter();
+	virtual ~gen_event_filter();
 
 	/*!
 	  \brief Applies the filter to the given event.
