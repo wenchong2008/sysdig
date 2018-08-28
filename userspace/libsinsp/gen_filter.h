@@ -68,6 +68,9 @@ public:
 	*/
 	int32_t get_check_id();
 
+	// Every event must expose a timestamp
+	virtual uint64_t get_ts() = 0;
+
 private:
 	int32_t m_check_id = 0;
 
