@@ -37,7 +37,6 @@ bool flt_compare_ipv4net(cmpop op, uint64_t operand1, ipv4net* operand2);
 
 char* flt_to_string(uint8_t* rawval, filtercheck_field_info* finfo);
 int32_t gmt2local(time_t t);
-void ts_to_string(uint64_t ts, OUT string* res, bool full, bool ns);
 
 class operand_info
 {

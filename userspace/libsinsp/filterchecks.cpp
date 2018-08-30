@@ -89,7 +89,7 @@ int32_t gmt2local(time_t t)
 	return dt;
 }
 
-void ts_to_string(uint64_t ts, OUT string* res, bool date, bool ns)
+void sinsp_utils::ts_to_string(uint64_t ts, OUT string* res, bool date, bool ns)
 {
 	struct tm *tm;
 	time_t Time;
@@ -2939,14 +2939,14 @@ uint8_t* sinsp_filter_check_event::extract(sinsp_evt *evt, OUT uint32_t* len, bo
 		}
 		else
 		{
-			ts_to_string(evt->get_ts(), &m_strstorage, false, true);
+			sinsp_utils::ts_to_string(evt->get_ts(), &m_strstorage, false, true);
 		}
 		RETURN_EXTRACT_STRING(m_strstorage);
 	case TYPE_TIME_S:
-		ts_to_string(evt->get_ts(), &m_strstorage, false, false);
+		sinsp_utils::ts_to_string(evt->get_ts(), &m_strstorage, false, false);
 		RETURN_EXTRACT_STRING(m_strstorage);
 	case TYPE_DATETIME:
-		ts_to_string(evt->get_ts(), &m_strstorage, true, true);
+		sinsp_utils::ts_to_string(evt->get_ts(), &m_strstorage, true, true);
 		RETURN_EXTRACT_STRING(m_strstorage);
 	case TYPE_RAWTS:
 		RETURN_EXTRACT_VAR(evt->m_pevt->ts);
@@ -3098,7 +3098,7 @@ uint8_t* sinsp_filter_check_event::extract(sinsp_evt *evt, OUT uint32_t* len, bo
 			switch(m_inspector->m_output_time_flag)
 			{
 				case 'h':
-					ts_to_string(evt->get_ts(), &m_strstorage, false, true);
+					sinsp_utils::ts_to_string(evt->get_ts(), &m_strstorage, false, true);
 					RETURN_EXTRACT_STRING(m_strstorage);
 
 				case 'a':
@@ -4562,7 +4562,7 @@ uint8_t* sinsp_filter_check_tracer::extract(sinsp_evt *evt, OUT uint32_t* len, b
 		RETURN_EXTRACT_VAR(eparser->m_id);
 	case TYPE_TIME:
 		{
-			ts_to_string(evt->get_ts(), &m_strstorage, false, true);
+			sinsp_utils::ts_to_string(evt->get_ts(), &m_strstorage, false, true);
 			RETURN_EXTRACT_STRING(m_strstorage);
 		}
 	case TYPE_NTAGS:
