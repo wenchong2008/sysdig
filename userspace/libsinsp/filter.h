@@ -204,7 +204,7 @@ private:
 
 /*@}*/
 
-class sinsp_filter_factory : gen_event_filter_factory
+class sinsp_filter_factory : public gen_event_filter_factory
 {
 public:
 	sinsp_filter_factory(sinsp *inspector);
