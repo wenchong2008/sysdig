@@ -23,10 +23,10 @@ const static struct luaL_reg ll_filter [] =
 	{NULL,NULL}
 };
 
-lua_parser::lua_parser(gen_event_filter_factory *factory, lua_State *ls, const char *lua_library_name)
+lua_parser::lua_parser(gen_event_filter_factory &factory, lua_State *ls, const char *lua_library_name)
+	: m_factory(factory)
 {
 	m_filter = NULL;
-	m_factory = factory;
 
 	m_ls = ls;
 	reset();
@@ -41,7 +41,7 @@ void lua_parser::reset()
 	m_last_boolop = BO_NONE;
 	m_nest_level = 0;
 
-	m_filter = m_factory->new_filter();
+	m_filter = m_factory.new_filter();
 }
 
 gen_event_filter* lua_parser::get_filter(bool reset_filter)

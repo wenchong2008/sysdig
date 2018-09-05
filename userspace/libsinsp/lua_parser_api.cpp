@@ -188,7 +188,7 @@ int lua_parser_cbacks::rel_expr(lua_State *ls)
 	gen_event_filter* filter = parser->m_filter;
 
 	const char* fld = luaL_checkstring(ls, 2);
-	gen_event_filter_check *chk = parser->m_factory->new_filtercheck(fld);
+	gen_event_filter_check *chk = parser->m_factory.new_filtercheck(fld);
 	if(chk == NULL)
 	{
 		string err = "filter_check called with nonexistent field " + string(fld);
