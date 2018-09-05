@@ -168,6 +168,11 @@ bool gen_event_filter_expression::compare(gen_event *evt)
 	return res;
 }
 
+uint8_t *gen_event_filter_expression::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
+{
+	return NULL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // sinsp_filter implementation
 ///////////////////////////////////////////////////////////////////////////////

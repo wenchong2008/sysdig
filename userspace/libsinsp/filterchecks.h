@@ -104,6 +104,7 @@ public:
 	// Extract the field from the event. In sanitize_strings is true, any
 	// string values are sanitized to remove nonprintable characters.
 	//
+        uint8_t* extract(gen_event *evt, OUT uint32_t* len, bool sanitize_strings = true);
 	virtual uint8_t* extract(sinsp_evt *evt, OUT uint32_t* len, bool sanitize_strings = true) = 0;
 
 	//

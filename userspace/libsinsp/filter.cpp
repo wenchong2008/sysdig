@@ -1187,6 +1187,11 @@ bool sinsp_filter_check::flt_compare(cmpop op, ppm_param_type type, void* operan
 	}
 }
 
+uint8_t* sinsp_filter_check::extract(gen_event *evt, OUT uint32_t* len, bool sanitize_strings)
+{
+	return extract((sinsp_evt *) evt, len, sanitize_strings);
+}
+
 bool sinsp_filter_check::compare(gen_event *evt)
 {
 	return compare((sinsp_evt *) evt);
