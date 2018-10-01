@@ -111,6 +111,18 @@ public:
 		return m_tid == m_pid;
 	}
 
+	std::string get_last_arg() const
+	{
+		if(!m_args.empty())
+		{
+			return *m_args.rbegin();
+		}
+		else
+		{
+			return "";
+		}
+	}
+
 	/*!
 	  \brief Get the main thread of the process containing this thread.
 	*/

@@ -1249,6 +1249,16 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 	threadinfo->allocate_private_state();
 	m_threadtable.put(threadinfo);
 
+	auto last_arg = threadinfo->get_last_arg();
+	static const std::string target("sdjagent.jar");
+	if(last_arg.size() >= target.size() && last_arg.substr(last_arg.size() - target.size())==target)
+	{
+		if(threadinfo->m_pid == threadinfo->m_tid)
+		{
+			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2 adding sdjagent thread %ld - %ld", threadinfo->m_pid, threadinfo->m_tid);
+		}
+	}
+
 	if(m_listener)
 	{
 		m_listener->on_thread_created(threadinfo);
