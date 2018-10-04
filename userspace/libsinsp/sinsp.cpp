@@ -821,11 +821,23 @@ void sinsp::on_new_entry_from_proc(void* context,
 			auto sinsp_tinfo = find_thread(tid, true);
 			if(sinsp_tinfo == nullptr || newti->m_clone_ts > sinsp_tinfo->m_clone_ts)
 			{
+				auto last_arg = newti->get_last_arg();
+				static const std::string target("sdjagent.jar");
+				if(last_arg == target)
+				{
+					g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc", newti);
+				}
 				m_thread_manager->add_thread(newti, true);
 			}
 		}
 		else
 		{
+			auto last_arg = newti->get_last_arg();
+			static const std::string target("sdjagent.jar");
+			if(last_arg.size() >= target.size() && last_arg.substr(last_arg.size() - target.size())==target)
+			{
+				g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc (2) %ld - %ld", newti, newti->m_pid, newti->m_tid);
+			}
 			m_thread_manager->add_thread(newti, true);
 		}
 	}
@@ -838,6 +850,12 @@ void sinsp::on_new_entry_from_proc(void* context,
 			sinsp_threadinfo* newti = new sinsp_threadinfo(this);
 			newti->init(tinfo);
 
+			auto last_arg = newti->get_last_arg();
+			static const std::string target("sdjagent.jar");
+			if(last_arg == target)
+			{
+				g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc (3)", newti);
+			}
 			m_thread_manager->add_thread(newti, true);
 
 			sinsp_tinfo = find_thread(tid, true);
@@ -877,6 +895,10 @@ void sinsp::import_thread_table()
 	{
 		sinsp_threadinfo* newti = new sinsp_threadinfo(this);
 		newti->init(pi);
+		if(newti->get_last_arg() == "sdjagent.jar")
+		{
+			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] Adding sdjagent thread from thread table %ld - %ld", newti, newti->m_pid, newti->m_tid);
+		}
 		m_thread_manager->add_thread(newti, true);
 	}
 }
@@ -1520,6 +1542,11 @@ threadinfo_map_t::ptr_t sinsp::get_thread_ref(int64_t tid, bool query_os_if_not_
 		//
 		// Done. Add the new thread to the list.
 		//
+		if(newti->get_last_arg() == "sdjagent.jar")
+		{
+			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] Adding sdjagent thread from get_thread_ref%ld - %ld", newti, newti->m_pid, newti->m_tid);
+		}
+
 		m_thread_manager->add_thread(newti, false);
 		sinsp_proc = find_thread(tid, lookup_only);
 	}

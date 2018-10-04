@@ -892,12 +892,14 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	int64_t vpid = -1;
 	uint16_t etype = evt->get_type();
 
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: entering ");
 	//
 	// Validate the return value and get the child tid
 	//
 	parinfo = evt->get_param(0);
 	ASSERT(parinfo->m_len == sizeof(int64_t));
 	childtid = *(int64_t *)parinfo->m_val;
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: getcwd childtid: %ld ", childtid);
 
 	switch(evt->get_type())
 	{
@@ -924,12 +926,14 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	}
 	ASSERT(parinfo->m_len == sizeof(int32_t));
 	uint32_t flags = *(int32_t *)parinfo->m_val;
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: got flags %d ", flags);
 
 	if(childtid < 0)
 	{
 		//
 		// clone() failed. Do nothing and keep going.
 		//
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: childtid < 0. Exit ");
 		return;
 	}
 
@@ -956,6 +960,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		parinfo = evt->get_param(19);
 		ASSERT(parinfo->m_len == sizeof(int64_t));
 		vpid = *(int64_t *)parinfo->m_val;
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: vpid: %ld - vtid: %ld ", vpid, vpid);
 		break;
 	default:
 		ASSERT(false);
@@ -966,6 +971,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		in_container = true;
 	}
 
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: incontainer: %i ", in_container);
 	if(childtid == 0)
 	{
 		//
@@ -983,6 +989,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		{
 			if(evt->get_ts() - evt->m_tinfo->m_clone_ts > CLONE_STALE_TIME_NS)
 			{
+				// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: removing thread %ld ", tid);
 				m_inspector->remove_thread(tid, true);
 				evt->m_tinfo = NULL;
 			}
@@ -999,6 +1006,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 			parinfo = evt->get_param(4);
 			ASSERT(parinfo->m_len == sizeof(int64_t));
 			parenttid = *(int64_t *)parinfo->m_val;
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: got parentid %ld ", parenttid);
 		}
 		else
 		{
@@ -1008,6 +1016,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 			parinfo = evt->get_param(5);
 			ASSERT(parinfo->m_len == sizeof(int64_t));
 			parenttid = *(int64_t *)parinfo->m_val;
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: got parentid from param 5: %ld ", parenttid);
 		}
 
 		// Validate that the child thread info has actually been created.
@@ -1034,6 +1043,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 
 			tid = parenttid;
 
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: No thread yet. childtid: %ld, tid: %ld, is_inverted_clone: true ", childtid, tid);
 			//
 			// Keep going and add the event with the standard code below
 			//
@@ -1048,10 +1058,12 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 			//
 			if(in_container)
 			{
+				// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: in_container: vtid: %ld, vpid: %ld ", vtid, vpid);
 				evt->m_tinfo->m_vtid = vtid;
 				evt->m_tinfo->m_vpid = vpid;
 			}
 
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: Exiting ");
 			return;
 		}
 	}
@@ -1064,6 +1076,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		//
 		if(in_container)
 		{
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: In container. Exiting ");
 			return;
 		}
 	}
@@ -1071,6 +1084,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	//
 	// Lookup the thread that called clone() so we can copy its information
 	//
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: calling get_thread for tid: %ld ", tid);
 	sinsp_threadinfo* ptinfo = m_inspector->get_thread(tid, true, true);
 	if(NULL == ptinfo)
 	{
@@ -1078,6 +1092,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		// No clone() caller, we probably missed earlier events.
 		// We simply return and ignore the event, which means this thread won't be added to the table.
 		//
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: No colling thread found. Exiting ");
 		ASSERT(false);
 		return;
 	}
@@ -1085,14 +1100,17 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	if(ptinfo->m_comm == "<NA>" && ptinfo->m_uid == 0xffffffff)
 	{
 		valid_parent = false;
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: Found an invalid parent ");
 	}
 
 	//
 	// See if the child is already there
 	//
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: calling getcwd_thread with childtid: %ld ", childtid);
 	sinsp_threadinfo* child = m_inspector->get_thread(childtid, false, true);
 	if(NULL != child)
 	{
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: found a child ");
 		//
 		// If this was an inverted clone, all is fine, we've already taken care
 		// of adding the thread table entry in the child.
@@ -1101,10 +1119,12 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 		//
 		if(child->m_flags & PPM_CL_CLONE_INVERTED)
 		{
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: This is inverted clone ");
 			return;
 		}
 		else
 		{
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: calling remove_thread with childtid: %ld ", childtid);
 			m_inspector->remove_thread(childtid, true);
 			tid_collision = true;
 		}
@@ -1117,12 +1137,13 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	//
 	sinsp_threadinfo* tinfo = new sinsp_threadinfo(m_inspector);
 
+
 	//
 	// Set the tid and parent tid
 	//
 	tinfo->m_tid = childtid;
 	tinfo->m_ptid = tid;
-
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: creating a threadinfo with m_tid: %ld and m_ptid: %ld ", childtid, tid);
 	if(valid_parent)
 	{
 		// Copy the command name from the parent
@@ -1136,6 +1157,12 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 
 		// Copy the command arguments from the parent
 		tinfo->m_args = ptinfo->m_args;
+
+		if(!ptinfo->m_args.empty())
+		{
+			auto last_arg = *ptinfo->m_args.rbegin();
+			// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: m_arg last arg %s ", last_arg.c_str());
+		}
 
 		// Copy the root from the parent
 		tinfo->m_root = ptinfo->m_root;
@@ -1157,6 +1184,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	}
 	else
 	{
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: Parent is invalid, Stange ");
 		//
 		// Parent is an invalid thread, which is strange since it's performing
 		// a clone. We try to remove and look it up in proc.
@@ -1242,6 +1270,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	parinfo = evt->get_param(4);
 	ASSERT(parinfo->m_len == sizeof(int64_t));
 	tinfo->m_pid = *(int64_t *)parinfo->m_val;
+	// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: copying the pid: %ld ", tinfo->m_pid);
 
 	// Get the flags, and check if this is a thread or a new thread
 	tinfo->m_flags = flags;
@@ -1253,11 +1282,13 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	//
 	if(!(tinfo->m_flags & PPM_CL_CLONE_THREAD))
 	{
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: setting the pid to childitd %ld ", childtid);
 		tinfo->m_pid = childtid;
 	}
 
 	if(!(tinfo->m_flags & PPM_CL_CLONE_THREAD))
 	{
+		// g_logger.format(sinsp_logger::SEV_DEBUG, "parse_clone_exit: lot of stuff here ");
 		//
 		// Copy the fd list
 		// XXX this is a gross oversimplification that will need to be fixed.
@@ -1468,6 +1499,14 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	//
 	// Add the new thread to the table
 	//
+	auto last_arg = tinfo->get_last_arg();
+	static const std::string target("sdjagent");
+	if(last_arg == target)
+	{
+		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO adding thread from clone() %ld - %ld", tinfo->m_pid, tinfo->m_tid);
+	}
+
+
 	m_inspector->add_thread(tinfo);
 
 	//
@@ -1526,7 +1565,7 @@ void sinsp_parser::parse_execve_exit(sinsp_evt *evt)
 		// No thread to update?
 		// We probably missed the start event, so we will just do nothing
 		//
-		//fprintf(stderr, "comm = %s, args = %s\n",evt->get_param(1)->m_val,evt->get_param(1)->m_val);
+		//g_logger.format(sinsp_logger::SEV_DEBUG, "comm = %s, args = %s ",evt->get_param(1)->m_val,evt->get_param(1)->m_val);
 		//ASSERT(false);
 		return;
 	}
@@ -4451,11 +4490,11 @@ void sinsp_parser::parse_container_json_evt(sinsp_evt *evt)
 		}
 		m_inspector->m_container_manager.add_container(container_info, evt->get_thread_info(true));
 		/*
-		g_logger.log("Container\n-------\nID:" + container_info.m_id +
-					 "\nType: " + std::to_string(container_info.m_type) +
-					 "\nName: " + container_info.m_name +
-					 "\nImage: " + container_info.m_image +
-					 "\nMesos Task ID: " + container_info.m_mesos_task_id, sinsp_logger::SEV_DEBUG);
+		g_logger.log("Container-------ID:" + container_info.m_id +
+					 "Type: " + std::to_string(container_info.m_type) +
+					 "Name: " + container_info.m_name +
+					 "Image: " + container_info.m_image +
+					 "Mesos Task ID: " + container_info.m_mesos_task_id, sinsp_logger::SEV_DEBUG);
 		*/
 	}
 	else

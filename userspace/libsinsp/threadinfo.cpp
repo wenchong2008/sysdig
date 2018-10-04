@@ -1227,6 +1227,12 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 #ifdef GATHER_INTERNAL_STATS
 	m_added_threads->increment();
 #endif
+	auto last_arg = threadinfo->get_last_arg();
+	static const std::string target("sdjagent.jar");
+	if(last_arg == target)
+	{
+		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] adding sdjagent thread %ld - %ld", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
+	}
 
 	m_last_tinfo.reset();
 
@@ -1236,6 +1242,11 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 #endif
 		)
 	{
+		if(threadinfo->m_pid == threadinfo->m_tid)
+		{
+			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] dropped sdjagent thread %ld - %ld", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
+		}
+
 		m_n_drops++;
 		return;
 	}
@@ -1248,16 +1259,6 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 	threadinfo->compute_program_hash();
 	threadinfo->allocate_private_state();
 	m_threadtable.put(threadinfo);
-
-	auto last_arg = threadinfo->get_last_arg();
-	static const std::string target("sdjagent.jar");
-	if(last_arg.size() >= target.size() && last_arg.substr(last_arg.size() - target.size())==target)
-	{
-		if(threadinfo->m_pid == threadinfo->m_tid)
-		{
-			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2 adding sdjagent thread %ld - %ld", threadinfo->m_pid, threadinfo->m_tid);
-		}
-	}
 
 	if(m_listener)
 	{
@@ -1285,6 +1286,13 @@ void sinsp_thread_manager::remove_thread(int64_t tid, bool force)
 	}
 	else if((nchilds = tinfo->m_nchilds) == 0 || force)
 	{
+		auto last_arg = tinfo->get_last_arg();
+		static const std::string target("sdjagent.jar");
+		if(last_arg == target)
+		{
+			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] deleting  thread %ld - %ld", tinfo, tinfo->m_pid, tinfo->m_pid);
+		}
+
 		//
 		// Decrement the refcount of the main thread/program because
 		// this reference is gone
@@ -1634,4 +1642,19 @@ void sinsp_thread_manager::dump_threads_to_file(scap_dumper_t* dumper)
 		scap_proc_free(m_inspector->m_h, sctinfo);
 		return true;
 	});
+}
+
+void threadinfo_map_t::put(sinsp_threadinfo* tinfo)
+{
+	if(tinfo->get_last_arg() == "sdjagent.jar")
+	{
+		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::put[%x] pids %ld - %ld", tinfo, tinfo->m_pid, tinfo->m_tid);
+	}
+	m_threads[tinfo->m_tid] = ptr_t(tinfo);
+}
+
+void threadinfo_map_t::erase(uint64_t tid)
+{
+	auto num = m_threads.erase(tid);
+	g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::erase tid %ld. Eliminated %d elements", tid, num);
 }

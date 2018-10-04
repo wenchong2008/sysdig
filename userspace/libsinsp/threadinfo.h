@@ -113,14 +113,25 @@ public:
 
 	std::string get_last_arg() const
 	{
+		std::string ret;
+		std::string last;
 		if(!m_args.empty())
 		{
-			return *m_args.rbegin();
+			last = *m_args.rbegin();
+		}
+
+		auto pos = last.rfind("/");
+
+		if(pos != std::string::npos)
+		{
+			ret = last.substr(pos + 1);
 		}
 		else
 		{
-			return "";
+			ret = last;
 		}
+
+		return ret;
 	}
 
 	/*!
@@ -419,10 +430,15 @@ public:
 	typedef std::function<bool(sinsp_threadinfo&)> visitor_t;
 	typedef std::shared_ptr<sinsp_threadinfo> ptr_t;
 
-	inline void put(sinsp_threadinfo* tinfo)
-	{
-		m_threads[tinfo->m_tid] = ptr_t(tinfo);
-	}
+	// inline void put(sinsp_threadinfo* tinfo)
+	// {
+	// 	if(tinfo->get_last_arg() == "sdjagent.jar")
+	// 	{
+	// 		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::put[%x] pids %ld - %ld", tinfo, tinfo->m_pid, tinfo->m_tid);
+	// 	}
+	// 	m_threads[tinfo->m_tid] = ptr_t(tinfo);
+	// }
+	void put(sinsp_threadinfo* tinfo);
 
 	inline sinsp_threadinfo* get(uint64_t tid)
 	{
@@ -444,10 +460,12 @@ public:
 		return it->second;
 	}
 
-	inline void erase(uint64_t tid)
-	{
-		m_threads.erase(tid);
-	}
+	void erase(uint64_t tid);
+	// inline void erase(uint64_t tid)
+	// {
+	// 	auto num = m_threads.erase(tid);
+	// 	g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::erase tid %ld. Eliminated %d elements", tid, num);
+	// }
 
 	inline void clear()
 	{
