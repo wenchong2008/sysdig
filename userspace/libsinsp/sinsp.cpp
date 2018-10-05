@@ -825,7 +825,7 @@ void sinsp::on_new_entry_from_proc(void* context,
 				static const std::string target("sdjagent.jar");
 				if(last_arg == target)
 				{
-					g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc", newti);
+					g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| adding thread from proc||||", newti);
 				}
 				m_thread_manager->add_thread(newti, true);
 			}
@@ -836,7 +836,7 @@ void sinsp::on_new_entry_from_proc(void* context,
 			static const std::string target("sdjagent.jar");
 			if(last_arg.size() >= target.size() && last_arg.substr(last_arg.size() - target.size())==target)
 			{
-				g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc (2) %ld - %ld", newti, newti->m_pid, newti->m_tid);
+				g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| adding thread from proc (2) |%ld | %ld||", newti, newti->m_pid, newti->m_tid);
 			}
 			m_thread_manager->add_thread(newti, true);
 		}
@@ -854,7 +854,7 @@ void sinsp::on_new_entry_from_proc(void* context,
 			static const std::string target("sdjagent.jar");
 			if(last_arg == target)
 			{
-				g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] adding thread from proc (3)", newti);
+				g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|[%x| adding thread from proc (3)||||", newti);
 			}
 			m_thread_manager->add_thread(newti, true);
 
@@ -897,7 +897,7 @@ void sinsp::import_thread_table()
 		newti->init(pi);
 		if(newti->get_last_arg() == "sdjagent.jar")
 		{
-			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] Adding sdjagent thread from thread table %ld - %ld", newti, newti->m_pid, newti->m_tid);
+			g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| Adding sdjagent thread from thread table |%ld | %ld||", newti, newti->m_pid, newti->m_tid);
 		}
 		m_thread_manager->add_thread(newti, true);
 	}
@@ -1531,7 +1531,7 @@ threadinfo_map_t::ptr_t sinsp::get_thread_ref(int64_t tid, bool query_os_if_not_
 		// Since this thread is created out of thin air, we need to
 		// properly set its reference count, by scanning the table
 		//
-		m_thread_manager->m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+		m_thread_manager->m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 			if(tinfo.m_pid == tid)
 			{
 				newti->m_nchilds++;
@@ -1544,7 +1544,7 @@ threadinfo_map_t::ptr_t sinsp::get_thread_ref(int64_t tid, bool query_os_if_not_
 		//
 		if(newti->get_last_arg() == "sdjagent.jar")
 		{
-			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO[%x] Adding sdjagent thread from get_thread_ref%ld - %ld", newti, newti->m_pid, newti->m_tid);
+			g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| Adding sdjagent thread from get_thread_ref |%ld | %ld ||", newti, newti->m_pid, newti->m_tid);
 		}
 
 		m_thread_manager->add_thread(newti, false);
@@ -2436,7 +2436,7 @@ bool sinsp_thread_manager::remove_inactive_threads()
 		//
 		// Go through the table and remove dead entries.
 		//
-		m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+		m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 			bool closed = (tinfo.m_flags & PPM_CL_CLOSED) != 0;
 
 			if(closed ||

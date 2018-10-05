@@ -427,7 +427,7 @@ VISIBILITY_PRIVATE
 class threadinfo_map_t
 {
 public:
-	typedef std::function<bool(sinsp_threadinfo&)> visitor_t;
+	typedef std::function<bool(int64_t, sinsp_threadinfo&)> visitor_t;
 	typedef std::shared_ptr<sinsp_threadinfo> ptr_t;
 
 	// inline void put(sinsp_threadinfo* tinfo)
@@ -476,7 +476,7 @@ public:
 	{
 		for (auto& it : m_threads)
 		{
-			if (!callback(*it.second.get()))
+			if (!callback(it.first, *it.second.get()))
 			{
 				return false;
 			}

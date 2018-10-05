@@ -1503,7 +1503,7 @@ void sinsp_parser::parse_clone_exit(sinsp_evt *evt)
 	static const std::string target("sdjagent");
 	if(last_arg == target)
 	{
-		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO adding thread from clone() %ld - %ld", tinfo->m_pid, tinfo->m_tid);
+		g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| adding thread from clone()| %ld | %ld||", tinfo, tinfo->m_pid, tinfo->m_tid);
 	}
 
 

@@ -762,7 +762,7 @@ int lua_cbacks::get_thread_table_int(lua_State *ls, bool include_fds, bool bareb
 
 	lua_newtable(ls);
 
-	threadtable->loop([&] (sinsp_threadinfo& tinfo) {
+	threadtable->loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		//
 		// Check if there's at least an fd that matches the filter.
 		// If not, skip this thread

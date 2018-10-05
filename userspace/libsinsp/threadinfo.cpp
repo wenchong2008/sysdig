@@ -1231,7 +1231,7 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 	static const std::string target("sdjagent.jar");
 	if(last_arg == target)
 	{
-		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] adding sdjagent thread %ld - %ld", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
+		g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO2|%x| adding sdjagent thread |%ld | %ld||", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
 	}
 
 	m_last_tinfo.reset();
@@ -1244,7 +1244,7 @@ void sinsp_thread_manager::add_thread(sinsp_threadinfo* threadinfo, bool from_sc
 	{
 		if(threadinfo->m_pid == threadinfo->m_tid)
 		{
-			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] dropped sdjagent thread %ld - %ld", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
+			g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO2|%x| dropped sdjagent thread| %ld | %ld||", threadinfo, threadinfo->m_pid, threadinfo->m_tid);
 		}
 
 		m_n_drops++;
@@ -1290,7 +1290,7 @@ void sinsp_thread_manager::remove_thread(int64_t tid, bool force)
 		static const std::string target("sdjagent.jar");
 		if(last_arg == target)
 		{
-			g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO2[%x] deleting  thread %ld - %ld", tinfo, tinfo->m_pid, tinfo->m_pid);
+			g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO2|%x| deleting  thread |%ld | %ld||", tinfo, tinfo->m_pid, tinfo->m_pid);
 		}
 
 		//
@@ -1374,7 +1374,7 @@ void sinsp_thread_manager::remove_thread(int64_t tid, bool force)
 
 void sinsp_thread_manager::fix_sockets_coming_from_proc()
 {
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		tinfo.fix_sockets_coming_from_proc();
 		return true;
 	});
@@ -1406,7 +1406,7 @@ void sinsp_thread_manager::reset_child_dependencies()
 	m_last_tinfo.reset();
 	m_last_tid = 0;
 
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		tinfo.m_nchilds = 0;
 		clear_thread_pointers(tinfo);
 		return true;
@@ -1415,7 +1415,7 @@ void sinsp_thread_manager::reset_child_dependencies()
 
 void sinsp_thread_manager::create_child_dependencies()
 {
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		increment_mainthread_childcount(&tinfo);
 		return true;
 	});
@@ -1492,7 +1492,7 @@ void sinsp_thread_manager::dump_threads_to_file(scap_dumper_t* dumper)
 
 	vector<uint32_t> lengths;
 
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		uint32_t il = (uint32_t)
 			(sizeof(uint32_t) +     // len
 			sizeof(uint64_t) +	// tid
@@ -1536,7 +1536,7 @@ void sinsp_thread_manager::dump_threads_to_file(scap_dumper_t* dumper)
 	}
 
 	uint32_t idx = 0;
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		scap_threadinfo *sctinfo;
 		struct iovec *args_iov, *envs_iov, *cgroups_iov;
 		int argscnt, envscnt, cgroupscnt;
@@ -1582,7 +1582,7 @@ void sinsp_thread_manager::dump_threads_to_file(scap_dumper_t* dumper)
 	// Third pass of the table to dump the FDs
 	//
 
-	m_threadtable.loop([&] (sinsp_threadinfo& tinfo) {
+	m_threadtable.loop([&] (int64_t, sinsp_threadinfo& tinfo) {
 		scap_threadinfo *sctinfo;
 
 		if((sctinfo = scap_proc_alloc(m_inspector->m_h)) == NULL)
@@ -1648,7 +1648,7 @@ void threadinfo_map_t::put(sinsp_threadinfo* tinfo)
 {
 	if(tinfo->get_last_arg() == "sdjagent.jar")
 	{
-		g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::put[%x] pids %ld - %ld", tinfo, tinfo->m_pid, tinfo->m_tid);
+		g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|%x| threadinfo_map::put pids| %ld | %ld||", tinfo, tinfo->m_pid, tinfo->m_tid);
 	}
 	m_threads[tinfo->m_tid] = ptr_t(tinfo);
 }
@@ -1656,5 +1656,5 @@ void threadinfo_map_t::put(sinsp_threadinfo* tinfo)
 void threadinfo_map_t::erase(uint64_t tid)
 {
 	auto num = m_threads.erase(tid);
-	g_logger.format(sinsp_logger::SEV_DEBUG, "MARAMAO threadinfo_map::erase tid %ld. Eliminated %d elements", tid, num);
+	g_logger.format(sinsp_logger::SEV_DEBUG, "|MARAMAO|| threadinfo_map::erase tid| %ld|deleted: %d||", tid, num);
 }
